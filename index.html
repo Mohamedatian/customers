@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mamado Gym - Customer Data Collection</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c 0%, #2c3e50 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #e65c00, #F9D423);
+            color: white;
+            text-align: center;
+            padding: 30px;
+            position: relative;
+        }
+        
+        header h1 {
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            color: #f8f8f8;
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            font-size: 2.5rem;
+            color: white;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .auth-container, .form-container {
+            flex: 1;
+            min-width: 350px;
+            padding: 30px;
+        }
+        
+        .data-container {
+            flex: 1;
+            min-width: 350px;
+            background: #f8f9fa;
+            padding: 25px;
+            max-height: 600px;
+            overflow-y: auto;
+            border-left: 1px solid #e0e0e0;
+        }
+        
+        .form-group {
+            margin-bottom: 22px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.05rem;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        .input-icon {
+            position: relative;
+        }
+        
+        .input-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+        }
+        
+        .input-icon input, .input-icon select {
+            padding-left: 45px;
+        }
+        
+        .required {
+            color: #e74c3c;
+        }
+        
+        .subscription-options {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .subscription-options label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .subscription-options label:hover {
+            background: #e8f4fc;
+            transform: translateY(-2px);
+        }
+        
+        .subscription-options input {
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        button {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: 600;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .export-btn {
+            background: linear-gradient(to right, #27ae60, #219653);
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .excel-icon {
+            margin-right: 10px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .data-table th {
+            background-color: #2c3e50;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .data-table tr:hover {
+            background-color: #e9e9e9;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #7f8c8d;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .user-info {
+            text-align: right;
+            padding: 15px 25px;
+            background: #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #dde4e6;
+        }
+        
+        .logout-btn {
+            background: #e74c3c;
+            width: auto;
+            padding: 10px 20px;
+            font-size: 15px;
+            border-radius: 8px;
+        }
+        
+        .tab-container {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            background: #f8f9fa;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            margin-right: 5px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .phone-container {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .country-code {
+            flex: 1;
+        }
+        
+        .phone-number {
+            flex: 3;
+        }
+        
+        .password-info {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            background: #e74c3c;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(100%);
+            transition: transform 0.5s;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        @media (max-width: 900px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .data-container {
+                border-left: none;
+                border-top: 1px solid #e0e0e0;
+            }
+            
+            .phone-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .logo {
+                position: relative;
+                top: 0;
+                left: 0;
+                margin-bottom: 15px;
+            }
+            
+            header {
+                padding: 25px 20px;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-dumbbell"></i>
+            </div>
+            <h1>Mamado Gym (Customers Data)</h1>
+            <p>Please provide your information to help us serve you better</p>
+        </header>
+        
+        <div class="user-info hidden" id="userInfo">
+            <span>Welcome, <span id="usernameDisplay">User</span></span>
+            <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+        
+        <div class="auth-container" id="authContainer">
+            <div class="tab-container">
+                <div class="tab active" id="loginTab">Login</div>
+                <div class="tab" id="registerTab">Register</div>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">Username <span class="required">*</span></label>
+                    <div class="input-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="loginUsername" name="loginUsername" required placeholder="Enter your username">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">Password <span class="required">*</span></label>
+                    <div class="input-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" name="loginPassword" required placeholder="Enter your password">
+                    </div>
+                </div>
+                
+                <button type="submit"><i class="fas fa-sign-in-alt"></i> Login</button>
+            </form>
+            
+            <form id="registerForm" class="hidden">
+                <div class="form-group">
+                    <label for="registerUsername">Username <span class="required">*</span></label>
+                    <div class="input-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="registerUsername" name="registerUsername" required placeholder="Choose a username">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerPassword">Password <span class="required">*</span></label>
+                    <div class="input-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="registerPassword" name="registerPassword" required placeholder="Choose a password">
+                    </div>
+                    <div class="password-info">Must contain at least one capital letter and one number</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password <span class="required">*</span></label>
+                    <div class="input-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirm your password">
+                    </div>
+                </div>
+                
+                <button type="submit"><i class="fas fa-user-plus"></i> Register</button>
+            </form>
+        </div>
+        
+        <div class="content hidden" id="mainContent">
+            <div class="form-container">
+                <form id="surveyForm">
+                    <div class="form-group">
+                        <label for="name">Full Name <span class="required">*</span></label>
+                        <div class="input-icon">
+                            <i class="fas fa-signature"></i>
+                            <input type="text" id="name" name="name" required placeholder="Enter your full name (letters only)" pattern="[A-Za-z\s]+">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="age">Age <span class="required">*</span></label>
+                        <div class="input-icon">
+                            <i class="fas fa-birthday-cake"></i>
+                            <input type="number" id="age" name="age" required placeholder="Enter your age" min="16" max="100">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">Phone Number <span class="required">*</span></label>
+                        <div class="phone-container">
+                            <div class="country-code input-icon">
+                                <i class="fas fa-globe"></i>
+                                <select id="countryCode" name="countryCode" required>
+                                    <option value="">Code</option>
+                                    <option value="+20">+20 (Egypt)</option>
+                                    <option value="+1">+1 (USA)</option>
+                                    <option value="+44">+44 (UK)</option>
+                                    <option value="+33">+33 (France)</option>
+                                    <option value="+49">+49 (Germany)</option>
+                                    <option value="+81">+81 (Japan)</option>
+                                    <option value="+86">+86 (China)</option>
+                                    <option value="+91">+91 (India)</option>
+                                    <option value="+971">+971 (UAE)</option>
+                                    <option value="+966">+966 (Saudi Arabia)</option>
+                                </select>
+                            </div>
+                            <div class="phone-number input-icon">
+                                <i class="fas fa-phone"></i>
+                                <input type="tel" id="phone" name="phone" required placeholder="Enter your phone number">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="country">Country <span class="required">*</span></label>
+                        <div class="input-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <select id="country" name="country" required>
+                                <option value="">Select your country</option>
+                                <option value="Egypt">Egypt</option>
+                                <option value="USA">United States</option>
+                                <option value="UK">United Kingdom</option>
+                                <option value="France">France</option>
+                                <option value="Germany">Germany</option>
+                                <option value="Japan">Japan</option>
+                                <option value="China">China</option>
+                                <option value="India">India</option>
+                                <option value="UAE">United Arab Emirates</option>
+                                <option value="Saudi Arabia">Saudi Arabia</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="egyptFields" class="hidden">
+                        <div class="form-group">
+                            <label for="city">City <span class="required">*</span></label>
+                            <div class="input-icon">
+                                <i class="fas fa-city"></i>
+                                <select id="city" name="city" required>
+                                    <option value="">Select your city</option>
+                                    <option value="Cairo">Cairo</option>
+                                    <option value="Alexandria">Alexandria</option>
+                                    <option value="Giza">Giza</option>
+                                    <option value="Luxor">Luxor</option>
+                                    <option value="Aswan">Aswan</option>
+                                    <option value="Port Said">Port Said</option>
+                                    <option value="Suez">Suez</option>
+                                    <option value="Ismailia">Ismailia</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="district">District <span class="required">*</span></label>
+                            <div class="input-icon">
+                                <i class="fas fa-map-pin"></i>
+                                <select id="district" name="district" required disabled>
+                                    <option value="">Please select a city first</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Subscription Plan <span class="required">*</span></label>
+                        <div class="subscription-options">
+                            <label for="basic"><input type="radio" id="basic" name="subscription" value="Basic" required> Basic</label>
+                            <label for="premium"><input type="radio" id="premium" name="subscription" value="Premium"> Premium</label>
+                            <label for="vip"><input type="radio" id="vip" name="subscription" value="VIP"> VIP</label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit"><i class="fas fa-paper-plane"></i> Submit Information</button>
+                    <button type="button" id="exportExcel" class="export-btn hidden">
+                        <span class="excel-icon"><i class="fas fa-file-excel"></i></span> Export to Excel
+                    </button>
+                </form>
+            </div>
+            
+            <div class="data-container hidden" id="dataContainer">
+                <h2><i class="fas fa-table"></i> Collected Data</h2>
+                <p>All data is stored in your browser's local storage</p>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Phone</th>
+                            <th>City</th>
+                            <th>District</th>
+                            <th>Subscription</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                        <!-- Data will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Your information is secure and will only be used to improve our services. © 2023 Mamado Gym</p>
+        </footer>
+    </div>
+
+    <div class="notification hidden" id="regionNotification">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>This service is not available in your region right now!</span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const authContainer = document.getElementById('authContainer');
+            const mainContent = document.getElementById('mainContent');
+            const userInfo = document.getElementById('userInfo');
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const surveyForm = document.getElementById('surveyForm');
+            const exportBtn = document.getElementById('exportExcel');
+            const tableBody = document.getElementById('dataTableBody');
+            const citySelect = document.getElementById('city');
+            const districtSelect = document.getElementById('district');
+            const countrySelect = document.getElementById('country');
+            const egyptFields = document.getElementById('egyptFields');
+            const dataContainer = document.getElementById('dataContainer');
+            const regionNotification = document.getElementById('regionNotification');
+            
+            // Districts data for Egyptian cities
+            const cityDistricts = {
+                'Cairo': ['Downtown', 'Zamalek', 'Maadi', 'Heliopolis', 'Nasr City', 'New Cairo', '6th of October', 'Shubra'],
+                'Alexandria': ['Al Montazah', 'Al Amiriyah', 'Al Attarin', 'Al Gomrok', 'Al Labban', 'Mansheya', 'Karmouz', 'Ras El Tin'],
+                'Giza': ['Dokki', 'Mohandessin', 'Agouza', 'Haram', 'Faisal', '6th of October', 'Sheikh Zayed', 'Imbaba'],
+                'Luxor': ['Luxor City', 'Karnak', 'Al Bayadiyah', 'Al Zenyah', 'Armant', 'Al Qarna', 'Esna', 'Al Tud'],
+                'Aswan': ['Aswan City', 'Elephantine', 'Seboua', 'Nasr Al Nuba', 'Kalabsha', 'Kom Ombo', 'Edfu', 'Abu Simbel'],
+                'Port Said': ['Port Fouad', 'Al-Zohur', 'Al-Manakh', 'Al-Dawahi', 'Al-Sharq', 'Al-Gharb', 'Al-Arab', 'Al-Manadia'],
+                'Suez': ['Suez City', 'Al-Arbaeen', 'Al-Ganayen', 'Faisal', 'Attaka', 'Al-Ameriya', 'Petroleum', 'Port Tawfiq'],
+                'Ismailia': ['Ismailia City', 'Al-Qantara', 'Fayed', 'Tel El Kebir', 'Abu Sawir', 'Al-Kassaseen', 'Al-Tall Al-Kabir', 'Al-Sabaa']
+            };
+            
+            // Initialize the application
+            initApp();
+            
+            // Initialize the application
+            function initApp() {
+                // Check if user is logged in
+                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                if (currentUser) {
+                    showMainContent(currentUser);
+                } else {
+                    authContainer.classList.remove('hidden');
+                }
+                
+                // Create admin user if not exists
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                const adminExists = users.some(u => u.username === 'admin' && u.password === 'admin1');
+                
+                if (!adminExists) {
+                    users.push({
+                        username: 'admin',
+                        password: 'admin1',
+                        role: 'admin'
+                    });
+                    localStorage.setItem('users', JSON.stringify(users));
+                }
+            }
+            
+            // Tab switching
+            loginTab.addEventListener('click', function() {
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            });
+            
+            registerTab.addEventListener('click', function() {
+                registerTab.classList.add('active');
+                loginTab.classList.remove('active');
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+            });
+            
+            // Login form submission
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('loginUsername').value;
+                const password = document.getElementById('loginPassword').value;
+                
+                // Check credentials
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                const user = users.find(u => u.username === username && u.password === password);
+                
+                if (user) {
+                    // Set current user
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    showMainContent(user);
+                } else {
+                    alert('Invalid username or password');
+                }
+            });
+            
+            // Register form submission
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('registerUsername').value;
+                const password = document.getElementById('registerPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                // Validation
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match');
+                    return;
+                }
+                
+                // Password validation (except for admin)
+                if (username !== 'admin') {
+                    const hasCapital = /[A-Z]/.test(password);
+                    const hasNumber = /[0-9]/.test(password);
+                    
+                    if (!hasCapital || !hasNumber) {
+                        alert('Password must contain at least one capital letter and one number');
+                        return;
+                    }
+                }
+                
+                // Check if user already exists
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                if (users.some(u => u.username === username)) {
+                    alert('Username already exists');
+                    return;
+                }
+                
+                // Create new user
+                const newUser = {
+                    username: username,
+                    password: password,
+                    role: 'user' // Default role
+                };
+                
+                users.push(newUser);
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                // Set current user
+                localStorage.setItem('currentUser', JSON.stringify(newUser));
+                showMainContent(newUser);
+                
+                alert('Registration successful! You are now logged in.');
+            });
+            
+            // Logout functionality
+            logoutBtn.addEventListener('click', function() {
+                localStorage.removeItem('currentUser');
+                authContainer.classList.remove('hidden');
+                mainContent.classList.add('hidden');
+                userInfo.classList.add('hidden');
+            });
+            
+            // Country selection change event
+            countrySelect.addEventListener('change', function() {
+                const selectedCountry = this.value;
+                
+                if (selectedCountry === 'Egypt') {
+                    egyptFields.classList.remove('hidden');
+                } else if (selectedCountry) {
+                    // Show notification for non-Egypt countries
+                    regionNotification.classList.add('show');
+                    setTimeout(() => {
+                        regionNotification.classList.remove('show');
+                    }, 5000);
+                    
+                    egyptFields.classList.add('hidden');
+                    // Reset country selection
+                    this.value = '';
+                } else {
+                    egyptFields.classList.add('hidden');
+                }
+            });
+            
+            // City selection change event
+            citySelect.addEventListener('change', function() {
+                const selectedCity = this.value;
+                
+                // Clear and disable district dropdown initially
+                districtSelect.innerHTML = '';
+                districtSelect.disabled = true;
+                
+                if (selectedCity && cityDistricts[selectedCity]) {
+                    // Enable district dropdown
+                    districtSelect.disabled = false;
+                    
+                    // Add districts for the selected city
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = 'Select your district';
+                    districtSelect.appendChild(defaultOption);
+                    
+                    cityDistricts[selectedCity].forEach(district => {
+                        const option = document.createElement('option');
+                        option.value = district;
+                        option.textContent = district;
+                        districtSelect.appendChild(option);
+                    });
+                } else {
+                    // No city selected or city without districts
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = 'Please select a city first';
+                    districtSelect.appendChild(defaultOption);
+                }
+            });
+            
+            // Survey form submission
+            surveyForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Form validation
+                const name = document.getElementById('name').value;
+                const age = document.getElementById('age').value;
+                const country = document.getElementById('country').value;
+                const city = document.getElementById('city').value;
+                const district = document.getElementById('district').value;
+                const phoneCode = document.getElementById('countryCode').value;
+                const phoneNumber = document.getElementById('phone').value;
+                const subscription = document.querySelector('input[name="subscription"]:checked');
+                
+                // Name validation (alphabetic only)
+                const namePattern = /^[A-Za-z\s]+$/;
+                if (!namePattern.test(name)) {
+                    alert('Name can only contain letters and spaces');
+                    return;
+                }
+                
+                if (!name || !age || !country || !phoneCode || !phoneNumber || !subscription) {
+                    alert('Please fill all required fields');
+                    return;
+                }
+                
+                if (country === 'Egypt' && (!city || !district)) {
+                    alert('Please fill all required fields');
+                    return;
+                }
+                
+                // Create form data object
+                const formData = {
+                    name: name,
+                    age: age,
+                    country: country,
+                    city: city || 'N/A',
+                    district: district || 'N/A',
+                    phone: phoneCode + ' ' + phoneNumber,
+                    subscription: subscription.value,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Get existing data or initialize empty array
+                let existingData = JSON.parse(localStorage.getItem('customerData') || '[]');
+                existingData.push(formData);
+                localStorage.setItem('customerData', JSON.stringify(existingData));
+                
+                // Update table if admin
+                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                if (currentUser && currentUser.username === 'admin' && currentUser.password === 'admin1') {
+                    loadTableData();
+                }
+                
+                alert('Thank you! Your information has been submitted successfully.');
+                this.reset();
+                
+                // Reset district dropdown
+                districtSelect.innerHTML = '';
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Please select a city first';
+                districtSelect.appendChild(defaultOption);
+                districtSelect.disabled = true;
+                
+                // Reset Egypt fields
+                egyptFields.classList.add('hidden');
+            });
+            
+            // Export to Excel
+            exportBtn.addEventListener('click', function() {
+                const customerData = JSON.parse(localStorage.getItem('customerData') || '[]');
+                
+                if (customerData.length === 0) {
+                    alert('No data to export');
+                    return;
+                }
+                
+                // Prepare data for Excel
+                const excelData = customerData.map(item => ({
+                    'Name': item.name,
+                    'Age': item.age,
+                    'Country': item.country,
+                    'City': item.city,
+                    'District': item.district,
+                    'Phone': item.phone,
+                    'Subscription': item.subscription,
+                    'Date': new Date(item.timestamp).toLocaleDateString()
+                }));
+                
+                // Create worksheet
+                const ws = XLSX.utils.json_to_sheet(excelData);
+                
+                // Create workbook
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Customer Data');
+                
+                // Export to Excel
+                XLSX.writeFile(wb, 'mamado_gym_customer_data.xlsx');
+            });
+            
+            // Load table data
+            function loadTableData() {
+                const customerData = JSON.parse(localStorage.getItem('customerData') || '[]');
+                tableBody.innerHTML = '';
+                
+                if (customerData.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No data collected yet</td></tr>';
+                    return;
+                }
+                
+                customerData.forEach(function(item) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.name}</td>
+                        <td>${item.age}</td>
+                        <td>${item.phone}</td>
+                        <td>${item.city}</td>
+                        <td>${item.district}</td>
+                        <td>${item.subscription}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            // Show main content after login
+            function showMainContent(user) {
+                authContainer.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                userInfo.classList.remove('hidden');
+                
+                usernameDisplay.textContent = user.username;
+                
+                // Show export button and data table only for admin
+                if (user.username === 'admin' && user.password === 'admin1') {
+                    exportBtn.classList.remove('hidden');
+                    dataContainer.classList.remove('hidden');
+                    loadTableData();
+                } else {
+                    exportBtn.classList.add('hidden');
+                    dataContainer.classList.add('hidden');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
