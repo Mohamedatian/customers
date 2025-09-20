@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRS Finder - Egypt Coordinate Systems</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c 0%, #2a4b8c 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .page {
+            display: none;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        #selection-page {
+            display: block;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .description {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .crs-options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .crs-option {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 300px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .crs-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .crs-option h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .crs-option p {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        
+        .option-btn {
+            background: linear-gradient(to right, #1a2a6c, #2a4b8c);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .option-btn:hover {
+            background: linear-gradient(to right, #2a4b8c, #3a6bcb);
+        }
+        
+        .search-box {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        
+        .search-input {
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 50px;
+            font-size: 1rem;
+            width: 300px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .search-input:focus {
+            border-color: #3498db;
+        }
+        
+        .search-btn {
+            background: linear-gradient(to right, #1a2a6c, #2a4b8c);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .search-btn:hover {
+            background: linear-gradient(to right, #2a4b8c, #3a6bcb);
+        }
+        
+        .content-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .location-data {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            flex: 1;
+            min-width: 300px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .map-container {
+            flex: 1;
+            min-width: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 10px;
+        }
+        
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .data-item:last-child {
+            border-bottom: none;
+        }
+        
+        .data-label {
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: left;
+        }
+        
+        .data-value {
+            color: #3498db;
+            text-align: right;
+            font-family: monospace;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, #1a2a6c, #2a4b8c);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            background: linear-gradient(to right, #2a4b8c, #3a6bcb);
+        }
+        
+        .back-btn {
+            background: linear-gradient(to right, #7f8c8d, #95a5a6);
+            margin-right: 15px;
+        }
+        
+        .info-box {
+            background-color: #e8f4fc;
+            border-left: 5px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: left;
+        }
+        
+        .info-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+        
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #e74c3c;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #fdecea;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .permission-note {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: left;
+        }
+        
+        .crs-details {
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .crs-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        
+        .crs-info {
+            margin-bottom: 10px;
+        }
+        
+        .belt-blue {
+            color: #3498db;
+            font-weight: bold;
+        }
+        
+        .belt-red {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .belt-purple {
+            color: #9b59b6;
+            font-weight: bold;
+        }
+        
+        .creator {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            
+            .page {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .crs-options {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .data-item {
+                flex-direction: column;
+            }
+            
+            .data-value {
+                text-align: left;
+                margin-top: 5px;
+            }
+            
+            .search-box {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .search-input {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Selection Page -->
+    <div id="selection-page" class="page">
+        <h1>CRS Finder - Egypt</h1>
+        <p class="description">Please select the coordinate reference system you want to use:</p>
+        
+        <div class="crs-options">
+            <div class="crs-option">
+                <h2>Egypt National CRS</h2>
+                <p>Uses Egypt's coordinate belts (Blue, Red, Purple) with the EGYPT 1907 datum</p>
+                <button class="option-btn" onclick="selectCRS('egypt')">Select This System</button>
+            </div>
+            
+            <div class="crs-option">
+                <h2>UTM CRS</h2>
+                <p>Uses Universal Transverse Mercator zones with WGS84 datum</p>
+                <button class="option-btn" onclick="selectCRS('utm')">Select This System</button>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <div class="info-title">About Coordinate Reference Systems</div>
+            <p>A Coordinate Reference System (CRS) defines how spatial data relates to real locations on Earth. Egypt uses both its national system (with three belts) and the global UTM system for different applications.</p>
+        </div>
+    </div>
+
+    <!-- Information Page -->
+    <div id="info-page" class="page">
+        <h1>CRS Finder - <span id="crs-type">Egypt National CRS</span></h1>
+        <p class="description">This tool detects your location and identifies the coordinate system information based on your selection.</p>
+        
+        <div class="search-box">
+            <input type="text" id="search-input" class="search-input" placeholder="Search for a location in Egypt...">
+            <button id="search-btn" class="search-btn">Search</button>
+        </div>
+        
+        <div class="permission-note">
+            <div class="info-title">Permission Note</div>
+            <p>This website requires location access to determine your coordinate system. When prompted, please allow location access. Your data remains private and is not stored on any server.</p>
+        </div>
+        
+        <button id="locate-btn" class="btn">Find My Location</button>
+        <button id="back-btn" class="btn back-btn">Back to Selection</button>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Detecting your location and coordinate system information...</p>
+        </div>
+        
+        <div id="error" class="error"></div>
+        
+        <div class="content-wrapper">
+            <div class="location-data">
+                <div class="data-item">
+                    <span class="data-label">Your Location:</span>
+                    <span id="location" class="data-value">Not detected yet</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Latitude:</span>
+                    <span id="latitude" class="data-value">-</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Longitude:</span>
+                    <span id="longitude" class="data-value">-</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Country:</span>
+                    <span id="country" class="data-value">-</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Governorate:</span>
+                    <span id="governorate" class="data-value">-</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">District:</span>
+                    <span id="district" class="data-value">-</span>
+                </div>
+                <div id="belt-container" class="data-item">
+                    <span class="data-label">Egypt Coordinate Belt:</span>
+                    <span id="belt" class="data-value">-</span>
+                </div>
+                <div id="utm-container" class="data-item" style="display: none;">
+                    <span class="data-label">UTM Zone:</span>
+                    <span id="utm-zone" class="data-value">-</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Coordinate System:</span>
+                    <span id="coordinate-system" class="data-value">-</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Accuracy:</span>
+                    <span id="accuracy" class="data-value">-</span>
+                </div>
+            </div>
+            
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+        </div>
+        
+        <div id="crs-details" class="crs-details">
+            <div class="crs-title">Coordinate System Details</div>
+            <div id="crs-info" class="crs-info">Location data will appear here after detection</div>
+        </div>
+        
+        <div class="info-box">
+            <div class="info-title">About Egypt's Coordinate Systems</div>
+            <div id="system-info">
+                <p>Egypt uses several coordinate systems for mapping:</p>
+                <p><span class="belt-blue">Blue Belt:</span> Covers longitudes from 25°E to 29°E (Western Egypt, including parts of the Western Desert)</p>
+                <p><span class="belt-red">Red Belt:</span> Covers longitudes from 29°E to 33°E (Central Egypt, including Cairo and the Nile Delta)</p>
+                <p><span class="belt-purple">Purple Belt:</span> Covers longitudes from 33°E to 37°E (Eastern Egypt, including Sinai Peninsula and Red Sea coast)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="creator">Created by: Mohamed Atian</div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize variables
+        let map;
+        let marker;
+        let accuracyCircle;
+        let currentCRS = 'egypt'; // Default to Egypt CRS
+        
+        // Function to show a specific page
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.style.display = 'none';
+            });
+            document.getElementById(pageId).style.display = 'block';
+        }
+        
+        // Function to select CRS
+        function selectCRS(crsType) {
+            currentCRS = crsType;
+            
+            // Update the page title based on selection
+            document.getElementById('crs-type').textContent = 
+                crsType === 'egypt' ? 'Egypt National CRS' : 'UTM CRS';
+                
+            // Show/hide appropriate containers
+            document.getElementById('belt-container').style.display = 
+                crsType === 'egypt' ? 'flex' : 'none';
+            document.getElementById('utm-container').style.display = 
+                crsType === 'utm' ? 'flex' : 'none';
+                
+            // Update system info based on selection
+            const systemInfo = document.getElementById('system-info');
+            if (crsType === 'egypt') {
+                systemInfo.innerHTML = `
+                    <p>Egypt uses several coordinate systems for mapping:</p>
+                    <p><span class="belt-blue">Blue Belt:</span> Covers longitudes from 25°E to 29°E (Western Egypt, including parts of the Western Desert)</p>
+                    <p><span class="belt-red">Red Belt:</span> Covers longitudes from 29°E to 33°E (Central Egypt, including Cairo and the Nile Delta)</p>
+                    <p><span class="belt-purple">Purple Belt:</span> Covers longitudes from 33°E to 37°E (Eastern Egypt, including Sinai Peninsula and Red Sea coast)</p>
+                `;
+            } else {
+                systemInfo.innerHTML = `
+                    <p>Egypt is covered by three UTM zones:</p>
+                    <p><strong>Zone 35N:</strong> West of 30°E longitude (Western Desert and parts of Nile Valley)</p>
+                    <p><strong>Zone 36N:</strong> Between 30°E and 36°E longitude (Most of Egypt including Cairo, Nile Delta)</p>
+                    <p><strong>Zone 37N:</strong> East of 36°E longitude (Eastern Desert, Red Sea coast, and Sinai Peninsula)</p>
+                    <p>The UTM system uses the WGS84 datum and measures coordinates in meters.</p>
+                `;
+            }
+            
+            // Show the information page
+            showPage('info-page');
+            
+            // Initialize the map if not already initialized
+            if (!map) {
+                initMap();
+            }
+        }
+        
+        // Initialize the map
+        function initMap() {
+            // Create a map centered on Egypt
+            map = L.map('map').setView([26.8206, 30.8025], 6);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // Add a temporary message for users
+            L.popup()
+                .setLatLng([26.8206, 30.8025])
+                .setContent('Click "Find My Location" to see your position')
+                .openOn(map);
+                
+            // Add click event to map
+            map.on('click', function(e) {
+                getLocationDetails(e.latlng.lat, e.latlng.lng);
+            });
+        }
+        
+        // Update the map with user's location
+        function updateMap(lat, lng, accuracy) {
+            // Set map view to user's location
+            map.setView([lat, lng], 13);
+            
+            // Remove existing marker and circle if they exist
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            if (accuracyCircle) {
+                map.removeLayer(accuracyCircle);
+            }
+            
+            // Add a marker for the user's location
+            marker = L.marker([lat, lng]).addTo(map)
+                .bindPopup('Your Location')
+                .openPopup();
+            
+            // Add a circle to show accuracy
+            if (accuracy) {
+                accuracyCircle = L.circle([lat, lng], {
+                    color: 'blue',
+                    fillColor: '#30a0e8',
+                    fillOpacity: 0.2,
+                    radius: accuracy
+                }).addTo(map);
+            }
+        }
+        
+        // Initialize when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up back button
+            document.getElementById('back-btn').addEventListener('click', function() {
+                showPage('selection-page');
+            });
+            
+            // Set up locate button
+            const locateBtn = document.getElementById('locate-btn');
+            const searchBtn = document.getElementById('search-btn');
+            const searchInput = document.getElementById('search-input');
+            const loadingElement = document.getElementById('loading');
+            const errorElement = document.getElementById('error');
+            
+            locateBtn.addEventListener('click', function() {
+                // Reset UI
+                errorElement.style.display = 'none';
+                loadingElement.style.display = 'block';
+                locateBtn.disabled = true;
+                
+                // Check if geolocation is supported
+                if (!navigator.geolocation) {
+                    showError('Geolocation is not supported by your browser');
+                    return;
+                }
+                
+                // Get current position
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        // Success callback
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        const accuracy = position.coords.accuracy;
+                        
+                        // Update location coordinates
+                        document.getElementById('latitude').textContent = latitude.toFixed(6);
+                        document.getElementById('longitude').textContent = longitude.toFixed(6);
+                        document.getElementById('accuracy').textContent = `${accuracy.toFixed(2)} meters`;
+                        
+                        // Update the map with user's location
+                        updateMap(latitude, longitude, accuracy);
+                        
+                        // Get location name and country
+                        getLocationDetails(latitude, longitude);
+                        
+                        loadingElement.style.display = 'none';
+                        locateBtn.disabled = false;
+                    },
+                    function(error) {
+                        // Error callback
+                        loadingElement.style.display = 'none';
+                        locateBtn.disabled = false;
+                        
+                        let errorMessage;
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = 'You denied the request for geolocation. Please allow location access to use this feature.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = 'Location information is unavailable. Please check your connection and try again.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = 'The request to get your location timed out. Please try again.';
+                                break;
+                            case error.UNKNOWN_ERROR:
+                                errorMessage = 'An unknown error occurred. Please try again later.';
+                                break;
+                        }
+                        
+                        showError(errorMessage);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 60000
+                    }
+                );
+            });
+            
+            // Search button
+            searchBtn.addEventListener('click', function() {
+                const query = searchInput.value.trim();
+                if (query) {
+                    searchLocation(query);
+                }
+            });
+            
+            // Search on Enter key
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const query = searchInput.value.trim();
+                    if (query) {
+                        searchLocation(query);
+                    }
+                }
+            });
+            
+            function searchLocation(query) {
+                loadingElement.style.display = 'block';
+                errorElement.style.display = 'none';
+                
+                // Use Nominatim for forward geocoding
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            const lat = parseFloat(data[0].lat);
+                            const lon = parseFloat(data[0].lon);
+                            
+                            // Update the map
+                            updateMap(lat, lon);
+                            
+                            // Get location details
+                            getLocationDetails(lat, lon);
+                        } else {
+                            showError('Location not found. Please try a different search term.');
+                        }
+                        
+                        loadingElement.style.display = 'none';
+                    })
+                    .catch(error => {
+                        showError('Error searching for location. Please try again.');
+                        loadingElement.style.display = 'none';
+                    });
+            }
+            
+            function getLocationDetails(lat, lng) {
+                // Using Nominatim for reverse geocoding
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let locationName = '';
+                        let country = '';
+                        let governorate = '';
+                        let district = '';
+                        
+                        if (data.address) {
+                            // Get district information
+                            district = data.address.suburb || data.address.neighbourhood || data.address.city_district || '';
+                            
+                            // Get governorate/state information
+                            governorate = data.address.state || data.address.region || '';
+                            
+                            // Get country
+                            country = data.address.country || '';
+                            
+                            // Build location name
+                            if (data.address.city) {
+                                locationName = data.address.city;
+                            } else if (data.address.town) {
+                                locationName = data.address.town;
+                            } else if (data.address.village) {
+                                locationName = data.address.village;
+                            } else if (data.address.county) {
+                                locationName = data.address.county;
+                            } else if (governorate) {
+                                locationName = governorate;
+                            }
+                            
+                            if (country) {
+                                locationName += locationName ? ', ' + country : country;
+                            }
+                            
+                            document.getElementById('country').textContent = country;
+                            document.getElementById('governorate').textContent = governorate;
+                            document.getElementById('district').textContent = district || 'Not specified';
+                        }
+                        
+                        if (!locationName) {
+                            locationName = `Latitude: ${lat.toFixed(4)}, Longitude: ${lng.toFixed(4)}`;
+                        }
+                        
+                        document.getElementById('location').textContent = locationName;
+                        document.getElementById('latitude').textContent = lat.toFixed(6);
+                        document.getElementById('longitude').textContent = lng.toFixed(6);
+                        document.getElementById('accuracy').textContent = 'N/A (searched location)';
+                        
+                        // Determine the coordinate system details based on location
+                        determineCoordinateSystem(lat, lng, country);
+                    })
+                    .catch(error => {
+                        document.getElementById('location').textContent = `Latitude: ${lat.toFixed(4)}, Longitude: ${lng.toFixed(4)}`;
+                        determineCoordinateSystem(lat, lng, '');
+                    });
+            }
+            
+            function determineCoordinateSystem(lat, lng, country) {
+                let belt, utmZone, coordinateSystem, crsDetails;
+                
+                // Egypt-specific information
+                if (country.toLowerCase().includes('egypt') || 
+                    (lng >= 25 && lng <= 37 && lat >= 22 && lat <= 32)) {
+                    
+                    if (currentCRS === 'egypt') {
+                        // Determine which belt based on longitude
+                        if (lng >= 25 && lng < 29) {
+                            belt = 'Blue Belt';
+                        } else if (lng >= 29 && lng < 33) {
+                            belt = 'Red Belt';
+                        } else if (lng >= 33 && lng <= 37) {
+                            belt = 'Purple Belt';
+                        } else {
+                            belt = 'Outside Standard Belts';
+                        }
+                        
+                        coordinateSystem = 'EGYPT 1907 / Extended Helmert';
+                        document.getElementById('belt').textContent = belt;
+                        
+                        crsDetails = `
+                            <p><strong>Egypt Coordinate System:</strong> Egypt uses a national coordinate system divided into three belts, each covering 4 degrees of longitude.</p>
+                            <p><strong>Datum:</strong> EGYPT 1907 uses the Helmert transformation parameters to convert to WGS84.</p>
+                            <p><strong>Projection:</strong> Transverse Mercator projection with central meridian specific to each belt.</p>
+                            <p><strong>False Easting:</strong> Varies by belt (500,000 meters for Red Belt)</p>
+                            <p><strong>Scale Factor:</strong> 1.0</p>
+                        `;
+                    } else {
+                        // Determine UTM zone
+                        utmZone = Math.floor((lng + 180) / 6) + 1;
+                        coordinateSystem = 'WGS84 / UTM zone ' + utmZone + 'N';
+                        document.getElementById('utm-zone').textContent = 'Zone ' + utmZone + 'N';
+                        
+                        crsDetails = `
+                            <p><strong>UTM Coordinate System:</strong> Universal Transverse Mercator system divided into 60 zones worldwide.</p>
+                            <p><strong>Datum:</strong> WGS84 (World Geodetic System 1984).</p>
+                            <p><strong>Projection:</strong> Transverse Mercator projection with central meridian specific to each zone.</p>
+                            <p><strong>False Easting:</strong> 500,000 meters</p>
+                            <p><strong>False Northing:</strong> 0 meters for Northern Hemisphere</p>
+                            <p><strong>Scale Factor:</strong> 0.9996</p>
+                        `;
+                    }
+                } else {
+                    // Default for other countries
+                    coordinateSystem = 'WGS84 (World Geodetic System 1984)';
+                    
+                    if (currentCRS === 'utm') {
+                        utmZone = Math.floor((lng + 180) / 6) + 1;
+                        const hemisphere = lat >= 0 ? 'N' : 'S';
+                        document.getElementById('utm-zone').textContent = 'Zone ' + utmZone + hemisphere;
+                    } else {
+                        document.getElementById('belt').textContent = 'N/A (Outside Egypt)';
+                    }
+                    
+                    crsDetails = `
+                        <p><strong>Global CRS:</strong> WGS84 is the global standard used by GPS systems worldwide.</p>
+                        <p><strong>Datum:</strong> WGS84 is a global datum that defines an Earth-centered, Earth-fixed coordinate system.</p>
+                    `;
+                }
+                
+                // Update the UI
+                document.getElementById('coordinate-system').textContent = coordinateSystem;
+                document.getElementById('crs-info').innerHTML = crsDetails;
+            }
+            
+            function showError(message) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
